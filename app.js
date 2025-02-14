@@ -4,19 +4,22 @@ const mysql = require('mysql2');
 const app = express();
 const port = 3000;
 
-// Set up a connection pool
+// MySQL connection pool
 const pool = mysql.createPool({
-  host: 'db', // this is the name of your MySQL service in docker-compose
+  host: 'db', // from docker-compose.yml
   user: 'root',
   password: 'password',
   database: 'mydatabase',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
 
-// Test the connection
-app.get('/', (req, res) => {
+// Serve static files from the "public" folder
+app.use(express.static('public'));
+
+// Database connection test route (Optional - You can keep or remove)
+app.get('/dbtest', (req, res) => {
   pool.query('SELECT NOW() AS now', (error, results) => {
     if (error) {
       res.send(`Database connection failed: ${error.message}`);
@@ -26,7 +29,8 @@ app.get('/', (req, res) => {
   });
 });
 
+// Start server
 app.listen(port, () => {
-  console.log(`App listening at http://localhost:${port}`);
+  console.log(`App is running at http://localhost:${port}`);
 });
 
