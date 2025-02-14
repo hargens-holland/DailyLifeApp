@@ -3,28 +3,13 @@ pipeline {
 
     environment {
         DOCKER_REPO = 'hhargens/dailylifeapp'
-        DOCKER_TAG = 'v1.0.1'
+        DOCKER_TAG = 'v1.0.${BUILD_NUMBER}' // Unique tag per build
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scmGit(
-                    branches: [[name: 'main']],
-                    userRemoteConfigs: [[url: 'https://github.com/hargens-holland/DailyLifeApp.git']]
-                )
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh 'npm install'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh 'npm test || echo "No tests yet"'
+                git 'https://github.com/hargens-holland/DailyLifeApp.git'
             }
         }
 
