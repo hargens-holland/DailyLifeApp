@@ -3,13 +3,16 @@ pipeline {
 
     environment {
         DOCKER_REPO = 'hhargens/dailylifeapp'
-        DOCKER_TAG = 'v1.0.1' // Could automate with commit hash later
+        DOCKER_TAG = 'v1.0.1'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/hargens-holland/DailyLifeApp.git'
+                checkout scmGit(
+                    branches: [[name: 'main']],
+                    userRemoteConfigs: [[url: 'https://github.com/hargens-holland/DailyLifeApp.git']]
+                )
             }
         }
 
