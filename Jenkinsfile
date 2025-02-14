@@ -7,11 +7,11 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/hargens-holland/DailyLifeApp.git'
-            }
-        }
+	stage('Checkout') {
+    		steps {
+        		git branch: 'main', url: 'https://github.com/hargens-holland/DailyLifeApp.git'
+    		}		
+	}
 
         stage('Build Docker Image') {
             steps {
