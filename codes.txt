@@ -1,8 +1,0 @@
-VPC ID: vpc-0fb8e735d3ae2f2db
-Subnet ID: subnet-0b35408d25e2a0742
-Internet Gateway ID: igw-0d0870264f9bfce1d
-RouteTableId: rtb-04defb95484895a18
-Security Group ID: sg-0b66d2649b3d92cf4
-EC2 Instance ID: i-0d88081869bdd0c71
-Public IP: 3.92.174.225 
-MySQL endpoint: http://mydbinstance.c4j6i404gabj.us-east-1.rds.amazonaws.com/
