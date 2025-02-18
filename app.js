@@ -69,14 +69,24 @@ app.get('*', (req, res, next) => {
 
 // MySQL connection pool
 const pool = mysql.createPool({
-  host: 'db', // from docker-compose.yml
+  host: 'db',
   user: 'root',
   password: 'password',
   database: 'mydatabase',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-}).promise(); // Using promise wrapper for cleaner async/await syntax
+}).promise();
+
+// Test database connection immediately
+pool.getConnection()
+  .then(connection => {
+    console.log('Database connected successfully');
+    connection.release();
+  })
+  .catch(err => {
+    console.error('Error connecting to the database:', err);
+  });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'; // In production, use environment variable
 
@@ -101,7 +111,12 @@ const authenticateToken = async (req, res, next) => {
 app.post('/api/signup', async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
-    console.log('Received signup request:', { name, email, phone });
+    console.log('Received signup request:', {
+      name,
+      email,
+      phone,
+      passwordLength: password ? password.length : 0
+    });
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -118,10 +133,12 @@ app.post('/api/signup', async (req, res) => {
     }
 
     // Check if email already exists
+    console.log('Checking if email exists:', email);
     const [existingUsers] = await pool.execute(
       'SELECT id FROM users WHERE email = ?',
       [email]
     );
+    console.log('Existing users found:', existingUsers.length);
 
     if (existingUsers.length > 0) {
       console.log('Email already exists');
@@ -129,18 +146,27 @@ app.post('/api/signup', async (req, res) => {
     }
 
     // Hash password
+    console.log('Hashing password...');
     const passwordHash = await bcrypt.hash(password, 10);
+    console.log('Password hashed successfully');
 
     // Insert user into database
+    console.log('Attempting to insert user into database');
     const [result] = await pool.execute(
       'INSERT INTO users (name, email, phone, password_hash) VALUES (?, ?, ?, ?)',
       [name, email, phone, passwordHash]
     );
+    console.log('User inserted successfully:', result.insertId);
 
     console.log('User created successfully');
     res.status(201).json({ message: 'User created successfully' });
   } catch (error) {
     console.error('Server error in /api/signup:', error);
+    console.error('Full error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
     res.status(500).json({ error: 'Error creating user: ' + error.message });
   }
 });

@@ -6,12 +6,7 @@ COPY package*.json ./
 
 RUN npm install
 
-# Copy backend files
-COPY app.js ./
-
-# Ensure public directory exists and copy frontend files
-RUN mkdir -p public
-COPY public/ public/
+COPY . .
 
 EXPOSE 3000
 
