@@ -14,22 +14,14 @@ const WEB_PORT = 80;        // or 443 for HTTPS - main web traffic
 const DB_PORT = 3306;       // MySQL
 
 // Middleware
+app.use(express.json());
+app.use(cookieParser());
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      callback(null, true);
-    } else if (isProduction && origin === process.env.ALLOWED_ORIGIN) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ['http://localhost:5500', 'http://127.0.0.1:5500'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept', 'Authorization']
 }));
-app.use(express.json());
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve login page for root path and /login
@@ -111,63 +103,59 @@ const authenticateToken = async (req, res, next) => {
 app.post('/api/signup', async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
-    console.log('Received signup request:', {
-      name,
-      email,
-      phone,
-      passwordLength: password ? password.length : 0
-    });
+    console.log('Received request body:', req.body); // Add this line for debugging
+
+    // Input validation
+    if (!name || !email || !phone || !password) {
+      console.log('Missing required fields:', { name, email, phone, passwordPresent: !!password });
+      return res.status(400).json({ error: 'All fields are required' });
+    }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      console.log('Invalid email format');
+      console.log('Invalid email format:', email);
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
     // Validate phone number format (10 digits)
     const phoneRegex = /^\d{10}$/;
     if (!phoneRegex.test(phone)) {
-      console.log('Invalid phone format');
+      console.log('Invalid phone format:', phone);
       return res.status(400).json({ error: 'Invalid phone number format' });
     }
 
     // Check if email already exists
-    console.log('Checking if email exists:', email);
     const [existingUsers] = await pool.execute(
       'SELECT id FROM users WHERE email = ?',
       [email]
     );
-    console.log('Existing users found:', existingUsers.length);
 
     if (existingUsers.length > 0) {
-      console.log('Email already exists');
+      console.log('Email already exists:', email);
       return res.status(400).json({ error: 'Email already exists' });
     }
 
     // Hash password
-    console.log('Hashing password...');
     const passwordHash = await bcrypt.hash(password, 10);
-    console.log('Password hashed successfully');
 
     // Insert user into database
-    console.log('Attempting to insert user into database');
     const [result] = await pool.execute(
       'INSERT INTO users (name, email, phone, password_hash) VALUES (?, ?, ?, ?)',
       [name, email, phone, passwordHash]
     );
-    console.log('User inserted successfully:', result.insertId);
 
-    console.log('User created successfully');
-    res.status(201).json({ message: 'User created successfully' });
-  } catch (error) {
-    console.error('Server error in /api/signup:', error);
-    console.error('Full error details:', {
-      message: error.message,
-      stack: error.stack,
-      code: error.code
+    console.log('User created successfully:', result.insertId);
+
+    // Send success response
+    return res.status(201).json({
+      message: 'User created successfully',
+      userId: result.insertId
     });
-    res.status(500).json({ error: 'Error creating user: ' + error.message });
+
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -324,6 +312,11 @@ pool.execute(`
   return pool.execute('SELECT 1');
 }).catch(err => {
   console.error('Error initializing database tables:', err);
+});
+
+// Test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working' });
 });
 
 // Start API server

@@ -98,31 +98,48 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            // Validate passwords match
+            if (password.value !== confirmPassword.value) {
+                passwordMatchError.style.display = 'block';
+                return;
+            }
+
+            const userData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                password: password.value
+            };
+
+            console.log('Sending data:', userData);  // Debug log
+
             try {
-                console.log('Sending signup request...');
-                const response = await fetch('/api/signup', {  // Use relative path
+                const response = await fetch('/api/signup', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        name: document.getElementById('name').value,
-                        email: document.getElementById('email').value,
-                        phone: document.getElementById('phone').value,
-                        password: password.value
-                    }),
+                    body: JSON.stringify(userData),
                 });
 
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                    throw new Error('Server response was not valid JSON');
+                }
+
                 if (!response.ok) {
-                    const data = await response.json();
                     throw new Error(data.error || 'Sign up failed');
                 }
 
-                window.location.href = '/login.html';  // Redirect to login after successful signup
+                window.location.href = '/login.html';
             } catch (error) {
                 errorDiv.style.display = 'block';
                 errorDiv.textContent = error.message;
-                console.error('Error:', error);
+                console.error('Full error:', error);
             }
         });
     </script>
