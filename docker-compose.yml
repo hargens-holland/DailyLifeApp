@@ -2,20 +2,35 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "80:80"        # Web traffic
+      - "3000:3000"    # API
+    networks:
+      - app-network
     environment:
       - DB_HOST=db
       - DB_USER=root
       - DB_PASSWORD=password
       - DB_NAME=mydatabase
+      - NODE_ENV=production
     depends_on:
       - db
 
   db:
     image: mysql:5.7
+    networks:
+      - app-network
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: mydatabase
-    ports:
-      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db-data:
 
