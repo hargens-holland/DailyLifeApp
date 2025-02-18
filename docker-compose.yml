@@ -1,9 +1,11 @@
+version: '3.8'
+
 services:
   app:
     build: .
     ports:
-      - "80:80"        # Web traffic
-      - "3000:3000"    # API
+      - "80:80"
+      - "3000:3000"
     networks:
       - app-network
     environment:
@@ -12,8 +14,11 @@ services:
       - DB_PASSWORD=password
       - DB_NAME=mydatabase
       - NODE_ENV=production
+    volumes:
+      - ./public:/usr/src/app/public
     depends_on:
       - db
+    restart: unless-stopped
 
   db:
     image: mysql:5.7
@@ -26,6 +31,7 @@ services:
       MYSQL_DATABASE: mydatabase
     volumes:
       - db-data:/var/lib/mysql
+    restart: unless-stopped
 
 networks:
   app-network:
@@ -33,4 +39,3 @@ networks:
 
 volumes:
   db-data:
-
